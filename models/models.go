@@ -3,14 +3,19 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"time"
+)
+
+
+var (
+	ErrRecordNotFound = errors.New("record not found")
 )
 
 type Url struct {
 	ID uint64 `json:"id"`
 	CreatedAt time.Time	`json:"-"`
 	URL string `json:"url"`
-	Visits int `json:"-"`
 }
 
 type UrlModel struct {
@@ -26,5 +31,34 @@ func (u UrlModel) Insert(webUrl *Url) error {
 	return u.DB.QueryRow(query, webUrl.URL).Scan(&webUrl.ID, &webUrl.CreatedAt)
 }
 
+func (u UrlModel) Get(id uint64) (*Url, error) {
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+		SELECT id, created_at, url
+		FROM urls
+		WHERE id = $1`
+	
+	var url Url
+
+	err := u.DB.QueryRow(query, id).Scan(
+		&url.ID,
+		&url.CreatedAt,
+		&url.URL,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &url, nil
+}
 
 

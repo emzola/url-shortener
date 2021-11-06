@@ -14,12 +14,10 @@ func (app *application) routes() *httprouter.Router {
 
 	router.HandlerFunc(http.MethodGet, "/healthcheck", app.healthCheckHandler)
 
-	router.HandlerFunc(http.MethodPost, "/create", app.createShortUrlHandler)
-	router.HandlerFunc(http.MethodGet, "/{:id}", app.expandShortUrlHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/shorturl", app.createShortUrlHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/shorturl/:id", app.expandShortUrlHandler)
 
-	router.HandlerFunc(http.MethodGet, "/stats", app.showStatsHandler)
-
-	router.HandlerFunc(http.MethodDelete, "/{:id}", app.deleteShortUrlHandler)
+	router.HandlerFunc(http.MethodDelete, "/v1/shorturl/:id", app.deleteShortUrlHandler)
 
 	return router
 }
