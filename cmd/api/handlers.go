@@ -9,7 +9,6 @@ import (
 	"github.com/emzola/url-shortener/base62"
 	"github.com/emzola/url-shortener/models"
 	"github.com/emzola/url-shortener/validator"
-	"github.com/julienschmidt/httprouter"
 )
 
 func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,15 +65,16 @@ func (app *application) createShortUrlHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (app *application) expandShortUrlHandler(w http.ResponseWriter, r *http.Request) {
-	params := httprouter.ParamsFromContext(r.Context())
 
-	id, err :=  base62.Decode(params.ByName("id"))
+	id :=  app.readID(r)
+
+	decodedID, err := base62.Decode(id)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
-	url, err := app.model.Get(id)
+	url, err := app.model.Get(decodedID)
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrRecordNotFound):
@@ -85,11 +85,31 @@ func (app *application) expandShortUrlHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if r.Method == "GET" {
-    http.Redirect(w, r, url.URL, http.StatusMovedPermanently)
-	}
+  http.Redirect(w, r, url.URL, http.StatusMovedPermanently)
 }
 
 func (app *application) deleteShortUrlHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "delete short url")
+	id := app.readID(r)
+
+	decodedID, err := base62.Decode(id)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.model.Delete(decodedID)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, jsonWrapper{"message": "short url successfully deleted"}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }

@@ -36,5 +36,6 @@ func (app *application) methodNotAllowedResponse(w http.ResponseWriter, r *http.
 }
 
 func (app *application) failedValidationResponse(w http.ResponseWriter, r *http.Request, err error) {
-	app.errorResponse(w, r, http.StatusUnprocessableEntity, err)
+	message := "invalid url"
+	app.errorResponse(w, r, http.StatusUnprocessableEntity, message)
 }

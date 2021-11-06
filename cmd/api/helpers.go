@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 // Key wrapper for json objects
@@ -26,4 +28,10 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data jsonWr
 	w.Write(jsonData)
 
 	return nil
+}
+
+func (app *application) readID(r *http.Request) string {
+	params := httprouter.ParamsFromContext(r.Context())
+	id := params.ByName("id")
+	return id
 }

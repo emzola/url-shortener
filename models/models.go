@@ -61,4 +61,30 @@ func (u UrlModel) Get(id uint64) (*Url, error) {
 	return &url, nil
 }
 
+func (u UrlModel) Delete(id uint64) error {
+	if id < 1 {
+		return ErrRecordNotFound
+	}
+
+	query := `
+	DELETE FROM urls
+	WHERE id = $1`
+
+	result, err := u.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+
+	return nil
+}
+
 
